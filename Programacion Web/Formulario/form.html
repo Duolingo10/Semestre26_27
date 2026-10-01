@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Formulario</title>
+</head>
+<body>
+  <form autocomplete="off">
+    <fieldset>
+      <legend>Datos Personales</legend>
+
+      <label for="nombre">Nombre:</label>
+      <input type="text" id="nombre" name="nombre" required>
+      <br><br>
+
+      <label for="apellido">Apellido 1:</label>
+      <input type="text" id="apellido" name="apellido" required>
+      <br><br>
+
+      <label for="nacimiento">Fecha de nacimiento:</label>
+      <input type="date" id="nacimiento" name="nacimiento" required>
+      <br><br>
+
+      <label for="curp">CURP:</label>
+      <input type="text" id="curp" name="curp" required>
+      <br><br>
+
+      <label for="sexo">Sexo:</label>
+      <select id="sexo" name="sexo" required>
+        <option value="" disabled selected>Seleccione</option>
+        <option value="masculino">Masculino</option>
+        <option value="femenino">Femenino</option>
+      </select>
+        <br><br>
+
+      <label for="foto">Foto:</label>
+      <input type="file" id="foto" name="foto" accept="image/*">
+    </fieldset>
+  
+
+
+    <fieldset>
+      <legend>Datos de contacto</legend>
+
+      <label for="correo">Correo electrónico:</label>
+      <input type="email" id="correo" name="correo" autocomplete="off" required>
+      <br><br>
+
+      <label for="telefono">Teléfono:</label>
+      <input type="tel" id="telefono" name="telefono" autocomplete="off" required>
+      <br><br>
+
+      
+    </fieldset>
+
+  
+    <fieldset>
+        <legend>Datos escolares</legend>
+
+        <label for="carrera">Carrera:</label>
+        <input type="text" id="carrera" name="carrera" autocomplete="off" required>
+        <br><br>
+
+        <label for="nivel">Nivel de estudios:</label>
+        <select id="nivel" name="nivel" autocomplete="off" required>
+            <option value="" disabled selected>Seleccione</option>
+            <option value="Primer Semestre">Primer Semestre</option>
+            <option value="Segundo Semestre">Segundo Semestre</option>
+            <option value="Tercer Semestre">Tercer Semestre</option>
+            <option value="Cuarto Semestre">Cuarto Semestre</option>
+            <option value="Quinto Semestre">Quinto Semestre</option>
+            <option value="Sexto Semestre">Sexto Semestre</option>
+            <option value="Septimo Semestre">Septimo Semestre</option>
+            <option value="Octavo Semestre">Octavo Semestre</option>
+            <option value="Noveno Semestre">Noveno Semestre</option>
+            <option value="Decimo Semestre">Decimo Semestre</option>
+            
+        </select>
+    </fieldset>
+    
+  </form>
+    <input type="submit" value="Enviar">
+</body>
+</html>

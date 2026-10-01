@@ -1,0 +1,32 @@
+{
+  "paracetamol": {
+    "nombre": "Paracetamol 500 mg",
+    "tipo": "medicamento",
+    "dosis": "1 tableta cada 8 horas.",
+    "advertencia": "Evitar consumo con bebidas alcohólicas o en caso de afección hepática.",
+    "requiere_ocr_caducidad": true
+  },
+  "ibuprofeno": {
+    "nombre": "Ibuprofeno 400 mg",
+    "tipo": "medicamento",
+    "dosis": "1 tableta cada 8 horas después de consumir alimentos.",
+    "advertencia": "No tomar con el estómago vacío. Evitar si padece gastritis severa.",
+    "requiere_ocr_caducidad": true
+  },
+  "atun_lata": {
+    "nombre": "Lata de Atún en Agua",
+    "tipo": "alimento",
+    "alergenos": "Contiene pescado.",
+    "sellos": "Sin sellos de advertencia.",
+    "conservacion": "Almacenar en un lugar fresco. Una vez abierto, refrigerar y consumir en 24 horas.",
+    "requiere_ocr_caducidad": true
+  },
+  "leche_entera": {
+    "nombre": "Leche Entera 1 Litro",
+    "tipo": "alimento",
+    "alergenos": "Contiene lactosa.",
+    "sellos": "Exceso de grasas saturadas.",
+    "conservacion": "Mantener refrigerado a 4 °C una vez abierto.",
+    "requiere_ocr_caducidad": true
+  }
+}
