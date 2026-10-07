@@ -1,0 +1,10 @@
+torch
+torchvision
+torchaudio
+opencv-python
+easyocr
+pyttsx3
+numpy
+scikit-learn
+matplotlib
+seaborn
