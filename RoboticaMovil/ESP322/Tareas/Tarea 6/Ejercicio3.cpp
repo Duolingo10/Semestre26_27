@@ -62,15 +62,17 @@ void setup() {
     delay(1000);
 
 #if USAR_BINARIO
-    proteccionSerial = xSemaphoreCreateBinary();
-    if (proteccionSerial != NULL) {
-        xSemaphoreGive(proteccionSerial);
-    }
+   Serial.println("Usando semaforo binario");
+   proteccionSerial = xSemaphoreCreateBinary();
+   if (proteccionSerial != NULL) {
+       xSemaphoreGive(proteccionSerial);
+   }
 #else
-    proteccionSerial = xSemaphoreCreateMutex();
+   Serial.println("Usando mutex");
+   proteccionSerial = xSemaphoreCreateMutex();
 #endif
 
-    if (proteccionSerial == NULL) {
+   if (proteccionSerial == NULL) {
         Serial.println("Error al crear la proteccion.");
         return;
     }
