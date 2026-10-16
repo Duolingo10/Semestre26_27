@@ -1,18 +1,47 @@
-#include <Arduino.h>
 
-#define PIN_LED 2
-#define PIN_BOTON 15  //Marcado como 15 en el microcontrolador LILYGO OLED V3.0
+#include <Arduino.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 void setup() {
-  pinMode(PIN_LED,   OUTPUT);
-  pinMode(PIN_BOTON, INPUT_PULLUP);
+    Serial.begin(115200);
+    delay(1000);
+
+    Serial.println("Verificando vTaskList...");
+
+    Serial.printf(
+        "TRACE_FACILITY: %d\n",
+        configUSE_TRACE_FACILITY
+    );
+
+    Serial.printf(
+        "STATS_FORMATTING: %d\n",
+        configUSE_STATS_FORMATTING_FUNCTIONS
+    );
+
+#if (configUSE_TRACE_FACILITY == 1) && \
+    (configUSE_STATS_FORMATTING_FUNCTIONS == 1)
+
+    char lista[4096] = {0};
+
+    Serial.println("Listado de tareas:");
+    vTaskList(lista);
+    Serial.println(lista);
+
+#else
+
+    Serial.println(
+        "vTaskList no esta habilitada en esta compilacion."
+    );
+
+    Serial.printf(
+        "Numero de tareas: %u\n",
+        (unsigned)uxTaskGetNumberOfTasks()
+    );
+
+#endif
 }
 
 void loop() {
-  int estado_boton;
-  estado_boton = digitalRead(PIN_BOTON);
-  if(estado_boton == HIGH)
-    digitalWrite(PIN_LED, HIGH);
-  else 
-    digitalWrite(PIN_LED, LOW);
-} 
+    delay(1000);
+}

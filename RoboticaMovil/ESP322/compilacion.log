@@ -1,0 +1,4 @@
+Processing esp32dev (platform: espressif32; board: esp32dev; framework: arduino)
+--------------------------------------------------------------------------------
+Library Manager: Installing khoih-prog/ESP32TimerInterrupt @ ^1.6.0
+UnknownPackageError: Could not find the package with 'khoih-prog/ESP32TimerInterrupt @ ^1.6.0' requirements
