@@ -1,93 +1,179 @@
 
 #include <Arduino.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/semphr.h"
+#include <Wire.h>
+#include <Adafruit_SSD1306.h>
+#include <Adafruit_GFX.h>
 
-// 0 = Mutex (apartado a)
-// 1 = Semaforo binario (apartado b)
-#define USAR_BINARIO 1
+//Configuración de la pantalla
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET -1
 
-SemaphoreHandle_t proteccionSerial;
+// Pines utilizados
+#define PIN_SALIDA 2
+#define PIN_ENTRADA 4
 
-// Funcion para imprimir el mensaje
-void imprime(const char *nombre) {
-    Serial.printf(
-        "Mensaje de %s que corre en nucleo %d con prioridad %u\n",
-        nombre,
-        xPortGetCoreID(),
-        (unsigned)uxTaskPriorityGet(NULL)
-    );
-}
+//muestras
+#define NUM_MUESTRAS 1000
 
-// Protege la llamada a imprime()
-void imprimirSeguro(const char *nombre) {
-    if (xSemaphoreTake(proteccionSerial, portMAX_DELAY) == pdTRUE) {
-        imprime(nombre);
-        xSemaphoreGive(proteccionSerial);
+//I2C
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET, 400000UL, 100000UL);
+
+//arreglo para guardar las muestras
+int muestras[NUM_MUESTRAS];
+
+//Variables del generador
+int frecuencia = 30;
+int estado = LOW;
+int etapa = 0;
+
+unsigned long mitadPeriodo = 16667;
+unsigned long tiempoAnterior = 0;
+unsigned long tiempoPulso = 0;
+
+//lineas punteadas
+void dibujarPistas() {
+    for(int i = 1; i < 8; i++) {
+        int y = i * 8 - 1;
+        for(int x = 0; x < 128; x += 4) {
+            display.drawPixel(x, y, WHITE);
+        }
     }
 }
 
-// Compatibilidad con distintas versiones de FreeRTOS
-void esperaPeriodica(TickType_t *anterior, TickType_t periodo) {
-#if defined(INCLUDE_xTaskDelayUntil) && (INCLUDE_xTaskDelayUntil == 1)
-    xTaskDelayUntil(anterior, periodo);
-#else
-    vTaskDelayUntil(anterior, periodo);
-#endif
-}
+//graficar las 1000 muestras
+void graficar() {
+    int pista, x, yAlto, yBajo;
+    int yActual, yAnterior;
 
-// Tarea del nucleo 0
-void tarea0(void *parametro) {
-    TickType_t anterior = xTaskGetTickCount();
+    display.clearDisplay();
 
-    for (;;) {
-        imprimirSeguro("tarea0");
-        esperaPeriodica(&anterior, pdMS_TO_TICKS(1000));
+    // Dibujar los separadores
+    dibujarPistas();
+
+    for(int i = 0; i < NUM_MUESTRAS; i++) {
+        pista = i / 128;
+        x = i % 128;
+
+        //posiciones para HIGH y LOW
+        yAlto = pista * 8 + 1;
+        yBajo = pista * 8 + 5;
+
+        if(muestras[i] == HIGH) {
+            yActual = yAlto;
+        } else {
+            yActual = yBajo;
+        }
+
+        //punto actual
+        display.drawPixel(x, yActual, WHITE);
+
+        if(x > 0) {
+            if(muestras[i - 1] == HIGH) {
+                yAnterior = yAlto;
+            } else {
+                yAnterior = yBajo;
+            }
+
+            //linea horizontal
+            display.drawLine(x - 1, yAnterior, x, yAnterior, WHITE);
+
+            //linea vertical
+            display.drawLine(x, yAnterior, x, yActual, WHITE);
+        }
     }
+
+    display.display();
 }
 
-// Tarea del nucleo 1
-void tarea1(void *parametro) {
-    TickType_t anterior = xTaskGetTickCount();
+//tarea del osciloscopio
+void tareaOsciloscopio(void *parameter) {
+    TickType_t ticks0, inc_ms = pdMS_TO_TICKS(1);
 
-    for (;;) {
-        imprimirSeguro("tarea1");
-        esperaPeriodica(&anterior, pdMS_TO_TICKS(500));
+    while(true) {
+        ticks0 = xTaskGetTickCount();
+
+        for(int i = 0; i < NUM_MUESTRAS; i++) {
+            muestras[i] = digitalRead(PIN_ENTRADA);
+            xTaskDelayUntil(&ticks0, inc_ms);
+        }
+
+        graficar();
+        delay(2000);
     }
 }
 
 void setup() {
     Serial.begin(115200);
-    delay(1000);
+    pinMode(PIN_SALIDA, OUTPUT);
+    pinMode(PIN_ENTRADA, INPUT_PULLUP);
+    digitalWrite(PIN_SALIDA, LOW);
 
-#if USAR_BINARIO
-   Serial.println("Usando semaforo binario");
-   proteccionSerial = xSemaphoreCreateBinary();
-   if (proteccionSerial != NULL) {
-       xSemaphoreGive(proteccionSerial);
-   }
-#else
-   Serial.println("Usando mutex");
-   proteccionSerial = xSemaphoreCreateMutex();
-#endif
+    Serial.print("display.begin ...");
+    Serial.flush();
 
-   if (proteccionSerial == NULL) {
-        Serial.println("Error al crear la proteccion.");
-        return;
+    if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+        Serial.println(F("Falla al inicializar SSD1306"));
+        while(true);
     }
 
-    xTaskCreatePinnedToCore(
-        tarea0, "tarea0", 4096,
-        NULL, 1, NULL, 0
-    );
+    Serial.println("OK");
+    Serial.flush();
 
-    xTaskCreatePinnedToCore(
-        tarea1, "tarea1", 4096,
-        NULL, 1, NULL, 1
-    );
+    display.clearDisplay();
+    //lienas punteadas
+    dibujarPistas();
+    display.display();
+
+    //tiempos
+    tiempoAnterior = millis();
+    tiempoPulso = micros();
+
+    //tarea en nucleo 0
+    xTaskCreatePinnedToCore(tareaOsciloscopio, "tareaOsciloscopio", 4096, NULL, 1, NULL, 0);
+
+    Serial.printf("Frecuencia: %d Hz\n", frecuencia);
 }
 
 void loop() {
-    delay(1000);
+    unsigned long tiempoActual = millis();
+
+    //Frecuencia cada 1/3 ms
+    if(tiempoActual - tiempoAnterior >= 333) {
+        tiempoAnterior += 333;
+        etapa++;
+
+        if(etapa >= 3) {
+            etapa = 0;
+        }
+
+        //Frecuencia de 30 Hz
+        if(etapa == 0) {
+            frecuencia = 30;
+            mitadPeriodo = 16667;
+        }
+
+        //Frecuencia de 20 Hz
+        if(etapa == 1) {
+            frecuencia = 20;
+            mitadPeriodo = 25000;
+        }
+
+        //Frecuencia de 10 Hz
+        if(etapa == 2) {
+            frecuencia = 10;
+            mitadPeriodo = 50000;
+        }
+
+        Serial.printf("Frecuencia: %d Hz\n", frecuencia);
+    }
+
+    //Generar señal cuadrada
+    unsigned long tiempoActualMicros = micros();
+
+    if(tiempoActualMicros - tiempoPulso >= mitadPeriodo) {
+        tiempoPulso += mitadPeriodo;
+        estado = !estado;
+        digitalWrite(PIN_SALIDA, estado);
+    }
 }
